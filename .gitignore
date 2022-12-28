@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/.vs/SFMLlearning
+/x64/Debug
+/.vs
