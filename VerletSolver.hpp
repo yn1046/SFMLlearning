@@ -22,7 +22,7 @@ struct VerletObject {
 		position_previous{ position },
 		acceleration{ 0.0f, 0.0f },
 		radius{ radius },
-		color{color}
+		color{ color }
 	{}
 
 	void update(float dt) {
@@ -62,6 +62,7 @@ struct VerletSolver {
 
 	void update(float dt) {
 		apply_gravity();
+		checkCollisions(dt);
 		apply_constraint();
 		update_positions(dt);
 	}
@@ -78,16 +79,43 @@ struct VerletSolver {
 		}
 	}
 
+	void checkCollisions(float dt)
+	{
+		const float    response_coef = 0.75f;
+		const uint64_t objects_count = m_objects.size();
+		// Iterate on all objects
+		for (uint64_t i{ 0 }; i < objects_count; ++i) {
+			VerletObject& object_1 = m_objects[i];
+			// Iterate on object involved in new collision pairs
+			for (uint64_t k{ i + 1 }; k < objects_count; ++k) {
+				VerletObject& object_2 = m_objects[k];
+				const sf::Vector2f v = object_1.position - object_2.position;
+				const float        dist2 = v.x * v.x + v.y * v.y;
+				const float        min_dist = object_1.radius + object_2.radius;
+				// Check overlapping
+				if (dist2 < min_dist * min_dist) {
+					const float        dist = sqrt(dist2);
+					const sf::Vector2f n = v / dist;
+					const float mass_ratio_1 = object_1.radius / (object_1.radius + object_2.radius);
+					const float mass_ratio_2 = object_2.radius / (object_1.radius + object_2.radius);
+					const float delta = 0.5f * response_coef * (dist - min_dist);
+					// Update positions
+					object_1.position -= n * (mass_ratio_2 * delta);
+					object_2.position += n * (mass_ratio_1 * delta);
+				}
+			}
+		}
+	}
+
 	void apply_constraint() {
 		for (auto& obj : m_objects) {
-			const vec2 to_obj = obj.position - m_constraint_center;
-			const float dist = to_obj.x * to_obj.x + to_obj.y * to_obj.y;
-
-			// 50 is the default
-			if (dist > m_constraint_radius - obj.radius) {
-				const vec2 n = to_obj / dist;
-				obj.position = m_constraint_center + n * (dist - obj.radius);
+			const vec2 v = m_constraint_center - obj.position;
+			const float        dist = sqrt(v.x * v.x + v.y * v.y);
+			if (dist > (m_constraint_radius - obj.radius)) {
+				const sf::Vector2f n = v / dist;
+				obj.position = m_constraint_center - n * (m_constraint_radius - obj.radius);
 			}
+
 		}
 	}
 
@@ -113,7 +141,11 @@ struct VerletSolver {
 private:
 	std::vector<VerletObject> m_objects;
 	sf::Clock m_clock;
-	vec2 m_gravity = { 0.0f, 1.0f };
+	vec2 m_gravity = { 0.0f, 1000.0f };
 	vec2 m_constraint_center;
 	float m_constraint_radius = 100.f;
+
+	float vec2_length(vec2 v) {
+		return sqrt(v.x * v.x + v.y * v.y);
+	}
 };

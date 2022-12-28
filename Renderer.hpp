@@ -22,6 +22,7 @@ public:
 		circle.setOrigin(1.0f, 1.0f);
 		const auto& objects = solver.getObjects();
 		for (const auto& obj : objects) {
+			circle.setOrigin(obj.radius, obj.radius);
 			circle.setPosition(obj.position);
 			circle.setRadius(obj.radius);
 			circle.setFillColor(obj.color);

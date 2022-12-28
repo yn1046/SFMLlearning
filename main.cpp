@@ -25,7 +25,8 @@ int main()
 	);
 	Event ev;
 
-	Text text;
+	Text text_mouse_position;
+	Text text_shake_message;
 
 	// Verlet stuff
 	Renderer renderer{ window };
@@ -66,12 +67,19 @@ int main()
 
 		// Draw here!
 		auto [x, y] = Mouse::getPosition();
-		text.setString(std::format("Mouse: ({}, {})", x, y));
+		text_mouse_position.setString(std::format("Mouse: ({}, {})", x, y));
 		Font deffont;
 		deffont.loadFromFile("8bo.ttf");
-		text.setFont(deffont);
-		text.setCharacterSize(12);
-		window.draw(text);
+		text_mouse_position.setFont(deffont);
+		text_mouse_position.setCharacterSize(12);
+		text_mouse_position.setFillColor(Color::Red);
+		window.draw(text_mouse_position);
+		text_shake_message.setString("Try shaking the window!");
+		text_shake_message.setFont(deffont);
+		text_shake_message.setCharacterSize(12);
+		text_shake_message.setPosition({ window_width - text_shake_message.getGlobalBounds().width - 10 , 0 });
+		text_shake_message.setFillColor(Color::Red);
+		window.draw(text_shake_message);
 		renderer.render(solver);
 
 		window.display(); // The window's done drawing
